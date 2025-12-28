@@ -2,7 +2,7 @@
 
 **L'entrée du modèle : une image brute (traitée partie 1) et sa description textuelle (traitée partie 2).**
 
-BDD utilisé : Flickr8k/Flickr30k
+BDD utilisé : Flickr8k
 
 *1. vision_part1.py (partie 1)*
 
