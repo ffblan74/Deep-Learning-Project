@@ -8,7 +8,7 @@ BDD utilisé : Flickr8k
 
 Ce module est responsable du traitement des images. Il utilise un réseau de neurones convolutif pré-entraîné, tel que ResNet50 ou VGG16, pour extraire les caractéristiques visuelles. Chaque image est ainsi transformée en un vecteur numérique.
 
-*3. text_part2.py (partie 2)*
+*3. text_part2.py (partie 2) utilise le fichier glove.6B.200d.txt (pour traduire les mots en vecteur)* 
 
 Ce script gère la description. Il nettoie les descriptions, effectue la tokenisation et utilise un réseau récurrent de type LSTM. Son rôle est de convertir les séquences de mots en vecteurs sémantiques qui capturent le contexte et le sens des phrases.
 
