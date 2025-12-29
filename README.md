@@ -10,7 +10,8 @@ Ce module est responsable du traitement des images. Il utilise un réseau de neu
 
 *3. text_part2.py (partie 2)*
 
-Utilise le fichier glove.6B.200d.txt (pour traduire les mots en vecteur) https://nlp.stanford.edu/data/glove.6B.zip
+Utilise le fichier glove.6B.200d.txt (pour traduire les mots en vecteur) https://nlp.stanford.edu/data/glove.6B.zip  
+Utilise le fichier Flickr8k.token.txt (pour obtenir des description d'images) https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip  
 Ce script gère la description. Il nettoie les descriptions, effectue la tokenisation et utilise un réseau récurrent de type LSTM. Son rôle est de convertir les séquences de mots en vecteurs sémantiques qui capturent le contexte et le sens des phrases.
 
 *5. fusion_part3.py (partie 3)*
