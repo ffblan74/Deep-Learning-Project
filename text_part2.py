@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout
+from tensorflow.keras.layers import Input, Embedding, LSTM, Dense, Dropout, GRU
 from tensorflow.keras.models import Model
 import string
 import os
@@ -11,6 +11,48 @@ import os
 # Step 1: texte preprocessing
 # ==============================================================================
 
+def load_flickr_descriptions(filename):
+    """
+    Reads the Flickr8k token file and returns a dictionary.
+    Format: image_id -> list of 5 descriptions
+    """
+    mapping = {}
+    
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            text = file.read()
+            
+        for line in text.split('\n'):
+            
+            # Skip empty lines
+            if len(line) < 2:
+                continue
+                
+            # Split the line by whitespace
+            tokens = line.split()
+            
+            # The first token is the image ID (e.g., 1000268201_693b08cb0e.jpg#0)
+            image_id = tokens[0]
+            
+            # The rest is the description
+            image_desc = ' '.join(tokens[1:])
+            
+            # Remove the tag part (#0, #1, etc.) from the ID
+            image_id = image_id.split('#')[0]
+            
+            # Add to dictionary
+            if image_id not in mapping:
+                mapping[image_id] = []
+            
+            mapping[image_id].append(image_desc)
+            
+        print(f"Loaded {len(mapping)} images from {filename}")
+        return mapping
+
+    except FileNotFoundError:
+        print(f"ERROR: File '{filename}' not found.")
+        return {}
+    
 def clean_descriptions(descriptions_dict):
     """
     Cleans the text: lowercase, punctuation removal, adds <start>/<end> tags.
@@ -29,7 +71,7 @@ def clean_descriptions(descriptions_dict):
             words = [word for word in desc.split() if len(word) > 1 and word.isalpha()]
             desc = ' '.join(words)
             # 4. Add tags (Crucial for the RNN sequence)
-            desc = '<start> ' + desc + ' <end>'
+            desc = '<st art> ' + desc + ' <end>'
             new_list.append(desc)
         clean_descriptions_dict[image_id] = new_list
         
@@ -38,7 +80,6 @@ def clean_descriptions(descriptions_dict):
 def create_tokenizer(all_descriptions_list):
     """
     Creates the vocabulary dictionary (Tokenization).
-    Reference: 
     """
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(all_descriptions_list)
@@ -96,32 +137,27 @@ def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix
     text_input = Input(shape=(max_length,), name="text_input")
     
     # 2. Embedding Layer (With or without GloVe)
-    # Reference: 
     if embedding_matrix is not None:
-        # Case A: Using GloVe (Recommended)
-        # trainable=False means we freeze weights to keep GloVe knowledge
+        # Case we use GloVe
         embedding_layer = Embedding(vocab_size, 
                                     embedding_dim, 
                                     weights=[embedding_matrix], 
-                                    trainable=False, 
+                                    trainable=False, # trainable=False means we freeze weights to keep GloVe knowledge
                                     mask_zero=True)(text_input)
     else:
-        # Case B: Learning from scratch (if no GloVe file)
+        # Case we learning from scratch (if no GloVe file found)
         embedding_layer = Embedding(vocab_size, 
                                     embedding_dim, 
                                     mask_zero=True)(text_input)
     
     # 3. Dropout (Regularization)
-    # Reference: "Apply regularization techniques like dropout" [cite: 56]
     x = Dropout(0.5)(embedding_layer)
     
     # 4. LSTM Layer
-    # Reference: "Pass embedding vectors through an RNN (GRU or LSTM)" [cite: 46]
     # return_sequences=False because we want the final summary vector
-    x = LSTM(256)(x)
-    
+    # x = LSTM(256)(x)
+    x = GRU(256)(x)
     # 5. Sequence Encoding (Output)
-    # Reference: "The final layer of the RNN will represent the encoding" [cite: 47]
     encoding_output = Dense(256, activation='relu', name="text_vector_output")(x)
     
     model = Model(inputs=text_input, outputs=encoding_output, name="Text_RNN_Branch")
@@ -133,7 +169,7 @@ def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix
 if __name__ == "__main__":
     print("--- Starting Part 2: Text Processing ---")
     
-    # 1. Load Real Data (Make sure Flickr8k.token.txt is here)
+    # 1. Load Real Data (Flickr8k)
     filename = 'Flickr8k.token.txt' 
     
     if os.path.exists(filename):
@@ -152,21 +188,20 @@ if __name__ == "__main__":
         print(f"Max sentence length: {max_length}")
         
         # --- LOAD GLOVE ---
-        glove_path = 'glove.6B.200d.txt' # This file should be in the same directory
+        glove_path = 'glove.6B.300d.txt' # This file should be in the same directory
         
         if os.path.exists(glove_path):
             print("GLOVE file found. Loading matrix...")
-            # We call the function here!
-            embedding_matrix = load_glove_embeddings(glove_path, my_tokenizer.word_index, embedding_dim=200)
+            embedding_matrix = load_glove_embeddings(glove_path, my_tokenizer.word_index, embedding_dim=300)
         else:
             print("GLOVE file not found. Training embeddings from scratch.")
             embedding_matrix = None
             
         # D. Build Model (Passing the matrix)
-        model = build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix=embedding_matrix)
+        model = build_text_model(vocab_size, max_length, embedding_dim=300, embedding_matrix=embedding_matrix)
         
         model.summary()
         print("Model ready for Fusion.")
         
     else:
-        print(f"File {filename} is missing. Please download the dataset.")
+        print(f"File {filename} is missing. Download the dataset.")
