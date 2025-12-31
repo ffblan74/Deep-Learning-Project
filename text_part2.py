@@ -71,7 +71,7 @@ def clean_descriptions(descriptions_dict):
             words = [word for word in desc.split() if len(word) > 1 and word.isalpha()]
             desc = ' '.join(words)
             # 4. Add tags (Crucial for the RNN sequence)
-            desc = '<st art> ' + desc + ' <end>'
+            desc = '<start> ' + desc + ' <end>'
             new_list.append(desc)
         clean_descriptions_dict[image_id] = new_list
         

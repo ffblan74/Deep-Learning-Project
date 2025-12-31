@@ -1,0 +1,10 @@
+
+
+
+#Part 2
+# GloVe embeddings
+glove.6B/
+glove.6B.300d.txt
+#Flickkr8k dataset
+Flickr8k.token.txt
+Flickr_8k_Dataset/
