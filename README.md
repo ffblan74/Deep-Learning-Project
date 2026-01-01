@@ -7,6 +7,8 @@ BDD utilisé : Flickr8k
 *1. vision_part1.py (partie 1)*
 
 Ce module est responsable du traitement des images. Il utilise un réseau de neurones convolutif pré-entraîné, tel que ResNet50 ou VGG16, pour extraire les caractéristiques visuelles. Chaque image est ainsi transformée en un vecteur numérique.
+Utilise le fichier Flickr8k.token.txt (pour obtenir des description d'images) https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip 
+Utilise le fichier Flickr8k.dataset https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
 
 *3. text_part2.py (partie 2)*
 
