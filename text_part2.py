@@ -7,10 +7,8 @@ from tensorflow.keras.models import Model
 import string
 import os
 
-# ==============================================================================
-# Step 1: texte preprocessing
-# ==============================================================================
 
+# Step 1: texte preprocessing
 def load_flickr_descriptions(filename):
     """
     Reads the Flickr8k token file and returns a dictionary.
@@ -31,7 +29,7 @@ def load_flickr_descriptions(filename):
             # Split the line by whitespace
             tokens = line.split()
             
-            # The first token is the image ID (e.g., 1000268201_693b08cb0e.jpg#0)
+            # The first token is the image ID (ex : 1000268201_693b08cb0e.jpg#0)
             image_id = tokens[0]
             
             # The rest is the description
@@ -63,14 +61,14 @@ def clean_descriptions(descriptions_dict):
     for image_id, desc_list in descriptions_dict.items():
         new_list = []
         for desc in desc_list:
-            # 1. Convert to lowercase
+            # Convert to lowercase
             desc = desc.lower()
-            # 2. Remove punctuation
+            # Remove punctuation
             desc = desc.translate(translation_table)
-            # 3. Keep only alphabetic words (remove isolated numbers)
+            # Keep only alphabetic words (remove isolated numbers)
             words = [word for word in desc.split() if len(word) > 1 and word.isalpha()]
             desc = ' '.join(words)
-            # 4. Add tags (Crucial for the RNN sequence)
+            #Add tags (Crucial for the RNN sequence)
             desc = '<start> ' + desc + ' <end>'
             new_list.append(desc)
         clean_descriptions_dict[image_id] = new_list
@@ -85,10 +83,7 @@ def create_tokenizer(all_descriptions_list):
     tokenizer.fit_on_texts(all_descriptions_list)
     return tokenizer
 
-# ==============================================================================
 # Step 2: pre-trained word embeddings (GloVe)
-# ==============================================================================
-
 def load_glove_embeddings(glove_file_path, word_index, embedding_dim=200):
     """
     Loads GloVe vectors to avoid learning word meanings from scratch.
@@ -96,7 +91,7 @@ def load_glove_embeddings(glove_file_path, word_index, embedding_dim=200):
     print(f"Loading GloVe from {glove_file_path}...")
     embeddings_index = {}
     
-    # Read the GloVe file (e.g., glove.6B.200d.txt)
+    # Read the GloVe file
     try:
         with open(glove_file_path, encoding="utf-8") as f:
             for line in f:
@@ -122,10 +117,8 @@ def load_glove_embeddings(glove_file_path, word_index, embedding_dim=200):
     print(f"GloVe: {hits} words found out of {vocab_size} in the vocabulary.")
     return embedding_matrix
 
-# ==============================================================================
-# Step 3: RNN / LSTM
-# ==============================================================================
 
+# Step 3: RNN / LSTM
 def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix=None):
     """
     Builds the Text branch of the project.
@@ -133,10 +126,10 @@ def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix
     Output: Encoding vector (256).
     """
     
-    # 1. Input Layer
+    # Input Layer
     text_input = Input(shape=(max_length,), name="text_input")
     
-    # 2. Embedding Layer (With or without GloVe)
+    # Embedding Layer (With or without GloVe)
     if embedding_matrix is not None:
         # Case we use GloVe
         embedding_layer = Embedding(vocab_size, 
@@ -150,22 +143,21 @@ def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix
                                     embedding_dim, 
                                     mask_zero=True)(text_input)
     
-    # 3. Dropout (Regularization)
+
     x = Dropout(0.5)(embedding_layer)
     
-    # 4. LSTM Layer
-    # return_sequences=False because we want the final summary vector
+    # LSTM Layer
     # x = LSTM(256)(x)
     x = GRU(256)(x)
-    # 5. Sequence Encoding (Output)
+    # Sequence Encoding (Output)
     encoding_output = Dense(256, activation='relu', name="text_vector_output")(x)
     
     model = Model(inputs=text_input, outputs=encoding_output, name="Text_RNN_Branch")
     return model
 
-# ==============================================================================
+
+
 # Quick test (To verify the file works independently)
-# ==============================================================================
 if __name__ == "__main__":
     print("--- Starting Part 2: Text Processing ---")
     
