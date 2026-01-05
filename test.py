@@ -1,117 +1,58 @@
-import os
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.preprocessing.image import load_img
 import matplotlib.pyplot as plt
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import os
 
-# Import de tes modules
+
 import vision_part1
 import text_part2
-import fusion_part3
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
-MODEL_FILE = "modele_fusion.h5"     # Ton fichier actuel
+# Config
 TOKEN_FILE = "Flickr8k.token.txt"
-IMAGE_DIR = "Flicker8k_Dataset"
+IMAGE_PATH_TO_TEST = "Flicker8k_Dataset/1000268201_693b08cb0e.jpg" # Mets une image qui existe
+MODEL_FILE = "modele_fusion.h5" 
 
-def load_resources():
-    print("--- Chargement des ressources ---")
+# Note: Pour que ça marche, il faut avoir sauvegardé le modèle à la fin du main.py
 
-    # 1. Reconstruire le Tokenizer
+
+def main():
+    if not os.path.exists(MODEL_FILE):
+        print("Modèle non trouvé.")
+        return
+
+    #1. Recharger les outils (Tokenizer)
+    print("Chargement outils")
     descriptions = vision_part1.load_flickr_descriptions(TOKEN_FILE)
     clean_desc = text_part2.clean_descriptions(descriptions)
     all_sentences = [desc for desc_list in clean_desc.values() for desc in desc_list]
-    
     tokenizer = text_part2.create_tokenizer(all_sentences)
-    vocab_size = len(tokenizer.word_index) + 1
     max_length = max(len(d.split()) for d in all_sentences)
-    print(f"Tokenizer prêt (Vocab: {vocab_size} mots)")
 
-    # 2. Charger ResNet
-    cnn_model = vision_part1.build_cnn_encoder()
-    print("Encodeur Image (ResNet) chargé")
-    dummy_matrix = np.zeros((vocab_size, 300))
+    #2. Charger le modèle
+    model = load_model(MODEL_FILE)
+    print("Modèle chargé.")
 
-    fusion_model = fusion_part3.build_fusion_model(
-        vocab_size=vocab_size,
-        max_length=max_length,
-        embedding_dim=300,
-        embedding_matrix=dummy_matrix,
-        n_classes=len(vision_part1.CLASSES)
-    )
+    #3. Préparer l'image (PIXELS)
+    # On utilise la fonction qui renvoie (1, 224, 224, 3)
+    img_input = vision_part1.load_and_preprocess_image(IMAGE_PATH_TO_TEST)
     
-    # Maintenant que l'architecture est identique (gelée), on peut charger les poids
-    fusion_model.load_weights(MODEL_FILE)
-    print("Modèle de Fusion chargé avec succès !")
+    #4. Préparer un texte (Dummy ou réel)
+    # Le modèle a besoin de texte aussi. Pour tester juste l'image, on peut mettre un texte vide ou générique.
+    # Ou alors on teste une paire Image + Texte spécifique.
+    dummy_text = "<start> dog <end>"
+    seq = tokenizer.texts_to_sequences([dummy_text])[0]
+    seq_padded = pad_sequences([seq], maxlen=max_length, padding='post')
 
-    return tokenizer, max_length, cnn_model, fusion_model
-
-def predict_multimodal(image_path, text_input, tokenizer, max_length, cnn_model, fusion_model):
-    """
-    Fait une prédiction à partir d'une image ET d'un texte.
-    """
-    print(f"\nTraitement de l'image : {os.path.basename(image_path)}...")
+    # 5. Prédiction
+    pred = model.predict([img_input, seq_padded])[0]
     
-    # A. Préparation Image
-    img_feature = vision_part1.extract_image_features(cnn_model, image_path)
-    img_feature = np.expand_dims(img_feature, axis=0)
-
-    # B. Préparation Texte
-    seq = tokenizer.texts_to_sequences([text_input])
-    padded = pad_sequences(seq, maxlen=max_length, padding='post')
-
-    # C. Prédiction
-    pred_probs = fusion_model.predict([img_feature, padded], verbose=0)[0]
-
-    # D. Affichage
-    classes = vision_part1.CLASSES
-    
-    print(f"\nRÉSULTATS POUR : \"{text_input}\"")
-    print("-" * 40)
-    print(f"{'CLASSE':<12} | {'SCORE':<10} | {'DÉCISION'}")
-    print("-" * 40)
-    
-    results = list(zip(classes, pred_probs))
-    results.sort(key=lambda x: x[1], reverse=True) 
-
-    for cls, prob in results:
-        decision = "OUI" if prob > 0.5 else "NON"
-        print(f"{cls:<12} | {prob:.2%}      | {decision}")
-
-    # E. Montrer l'image
-    try:
-        img = load_img(image_path)
-        plt.imshow(img)
-        plt.axis('off')
-        plt.title(f"Input: {text_input}")
-        plt.show()
-    except:
-        pass
+    print("\nPrédictions :")
+    for i, cls in enumerate(vision_part1.CLASSES):
+        print(f"{cls}: {pred[i]:.4f}")
+        
+    plt.imshow(plt.imread(IMAGE_PATH_TO_TEST))
+    plt.show()
 
 if __name__ == "__main__":
-    # 1. Tout charger
-    tokenizer, max_len, cnn, model = load_resources()
-
-    # 2. Choisir une image au hasard
-    import random
-    all_files = os.listdir(IMAGE_DIR)
-    
-    # On filtre pour ne garder que les fichiers qui finissent par .jpg
-    # et on exclut les trucs bizarres qui contiennent ":" (comme Zone.Identifier)
-    valid_images = [f for f in all_files if f.endswith(".jpg") and ":" not in f]
-    
-    if len(valid_images) == 0:
-        print(f"Erreur : Aucune image .jpg trouvée dans {IMAGE_DIR}")
-        exit()
-
-    random_file = random.choice(valid_images)
-    image_path_test = os.path.join(IMAGE_DIR, random_file)
-
-    # 3. Tester snas phrase
-    phrase_test = ""
-    
-    # 4. Lancer la prédiction
-    predict_multimodal(image_path_test, phrase_test, tokenizer, max_len, cnn, model)
+    main()
