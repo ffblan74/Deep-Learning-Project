@@ -35,7 +35,7 @@ You can modify these variables at the beginning of the scripts to adapt them to 
 ### Global Configuration (main.py and test.py)
 
 ```python
-IMAGE_DIR = "Flicker8k_Dataset"      #  # Folder containing the images (note: located inside the "Flickr8k_Dataset" directory")
+IMAGE_DIR = "Flicker8k_Dataset"      # Folder containing the images (note: located inside the "Flickr8k_Dataset" directory")
 TOKEN_FILE = "Flickr8k.token.txt"    # File containing the descriptions
 GLOVE_FILE = "glove.6B.300d.txt"     # GloVe word vectors
 ```
