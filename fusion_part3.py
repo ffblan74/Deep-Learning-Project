@@ -30,7 +30,7 @@ def build_fusion_model(vocab_size, max_length, embedding_dim=300, embedding_matr
     # On passe l'entrée texte dans ce modèle
     x_text = text_branch_model(text_input)
 
-    # --- FUSION (Concaténation) ---
+    # FUSION (Concaténation)
     # On colle les vecteurs Image (256) et Texte (256) ensemble
     x = Concatenate()([x_img, x_text])
     

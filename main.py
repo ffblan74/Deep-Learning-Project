@@ -16,16 +16,16 @@ import fusion_part3
 IMAGE_DIR = "Flicker8k_Dataset"            # Dossier des images
 TOKEN_FILE = "Flickr8k.token.txt"          # Fichier des descriptions
 GLOVE_FILE = "glove.6B.300d.txt"           # Fichier GloVe
-MAX_IMAGES = 8000
-BATCH_SIZE = 64
-EPOCHS = 50
+MAX_IMAGES = 8000  # On passe à TOUT le dataset pour un modèle fort
+BATCH_SIZE = 64    # Un peu plus gros pour accélérer
+EPOCHS = 50        # On laisse le temps d'apprendre
 
 def main():
-    print("demarrage du projet Deep Learning Multi-Modal\n")
+    print("Demarrage du projet Deep Learning Multi-Modal\n")
 
     # etape 1 : Préparation du TEXTE (Partie 2)
-    print("\n[1/5] Chargement et nettoyage du texte...")
-    descriptions = vision_part1.load_flickr_descriptions(TOKEN_FILE)
+    print("\n[1/5] Chargement et nettoyage du texte")
+    descriptions = text_part2.load_flickr_descriptions(TOKEN_FILE)
     if not descriptions:
         print("Erreur : Descriptions introuvables.")
         return
@@ -43,7 +43,7 @@ def main():
     print(f"      Longueur max  : {max_length}")
 
     # Chargement de GloVe
-    print("\n[2/5] Chargement des Embeddings GloVe...")
+    print("\n[2/5] Chargement des Embeddings GloVe")
     if os.path.exists(GLOVE_FILE):
         embedding_matrix = text_part2.load_glove_embeddings(GLOVE_FILE, tokenizer.word_index, embedding_dim=300)
     else:
@@ -70,11 +70,11 @@ def main():
         if not os.path.exists(img_path):
             continue
             
-        # 1. Extraction Image (Partie 1)
+        # Extraction Image (Partie 1)
         # Cela transforme l'image en vecteur (2048,)
         img_feature = vision_part1.extract_image_features(cnn_model, img_path)
         
-        # 2. Extraction Labels (Partie 1 - Multi-label)
+        # Extraction Labels (Partie 1 - Multi-label)
         # On récupère les tags (chien, chat...) pour savoir quoi prédire
         labels = vision_part1.captions_to_multilabel(descriptions[img_id])
         
@@ -82,26 +82,28 @@ def main():
         if labels.sum() == 0:
             continue
 
-        # 3. Préparation Texte (Partie 2)
-        # On prend la 1ère description pour l'entraînement (simplification)
-        text_seq = tokenizer.texts_to_sequences([clean_desc[img_id][0]])[0]
-        text_padded = pad_sequences([text_seq], maxlen=max_length, padding='post')[0]
+        # Préparation Texte (Partie 2) 
+        # On utilise toutes les descriptions pour multiplier les données d'entraînement
+        for description in clean_desc[img_id]:
+            # On encode la phrase courante
+            text_seq = tokenizer.texts_to_sequences([description])[0]
+            text_padded = pad_sequences([text_seq], maxlen=max_length, padding='post')[0]
 
-        # Ajout aux listes
-        X_img_list.append(img_feature)
-        X_text_list.append(text_padded)
-        y_list.append(labels)
+            # Ajout aux listes (On duplique l'image et le label pour chaque phrase)
+            X_img_list.append(img_feature)
+            X_text_list.append(text_padded)
+            y_list.append(labels)
         
         count += 1
-        if count % 50 == 0:
-            print(f"Traitement : {count} images...")
+        if count % 200 == 0:
+            print(f"Traitement : {count}/{len(image_ids)} images...")
 
     # Conversion en tableaux Numpy
     X_img = np.array(X_img_list, dtype=np.float32)
     X_text = np.array(X_text_list, dtype=np.int32)
     y = np.array(y_list, dtype=np.float32)
 
-    print(f"Données prêtes : {X_img.shape[0]} exemples.")
+    print(f"Données prêtes : {X_img.shape[0]} exemples d'entraînement.")
 
     # Séparation Train / Validation
     X_img_train, X_img_val, X_text_train, X_text_val, y_train, y_val = train_test_split(
@@ -121,23 +123,22 @@ def main():
     
     model.summary()
     
-    # 1. Sauvegarde uniquement le MEILLEUR modèle (pas le dernier qui peut être overfitté)
+    
+    # Sauvegarde uniquement le meilleur modèle
     checkpoint = ModelCheckpoint(
-        "modele_fusion.h5",         # Nom du fichier
+        "modele_fusion.h5",
         monitor="val_accuracy",     # On surveille la précision de validation
         save_best_only=True,        # On écrase le fichier uniquement si on bat le record
         mode="max",                 # On veut le maximum de précision
         verbose=1
     )
-    
-    # 2. Arrête l'entraînement si on ne progresse plus (évite de perdre du temps)
+    # Arrête l'entraînement si on ne progresse plus (évite de perdre du temps)
     early_stopping = EarlyStopping(
         monitor="val_loss",
         patience=5,                 # Si pas d'amélioration pendant 5 époques -> STOP
         restore_best_weights=True
     )
-    
-    # 3. Réduit la vitesse d'apprentissage si on stagne (pour affiner le résultat)
+    # Réduit la vitesse d'apprentissage si on stagne (pour affiner le résultat)
     reduce_lr = ReduceLROnPlateau(
         monitor="val_loss",
         factor=0.2,
@@ -145,7 +146,7 @@ def main():
         min_lr=0.00001
     )
 
-    print("\n[5/5] Lancement de l'entraînement ...")
+    print("\n[5/5] Lancement de l'entraînement")
     history = model.fit(
         [X_img_train, X_text_train], 
         y_train,
@@ -155,8 +156,8 @@ def main():
         callbacks=[checkpoint, early_stopping, reduce_lr]
     )
 
-    #Pas besoin de model.save() manuel à la fin, car ModelCheckpoint l'a fait pendant l'entraînement
-    print("Modèle sauvegardé sous 'modele_fusion.h5'")
+    # Pas besoin de model.save() manuel à la fin, car ModelCheckpoint l'a fait pendant l'entraînement
+    print("Le meilleur modèle a été sauvegardé sous 'modele_fusion.h5'")
 
     plt.plot(history.history['accuracy'], label='Train Accuracy')
     plt.plot(history.history['val_accuracy'], label='Val Accuracy')

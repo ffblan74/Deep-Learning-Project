@@ -25,4 +25,6 @@ Ce fichier définit l'architecture de fusion multi-modale. Il récupère les vec
 Ce script permet le chargement des données du dataset Flickr8k et le processus d'entraînement.
 Il exécute la boucle d'apprentissage pour ajuster les poids de l'ensemble du modèle (fine-tuning) et sauvegarde le résultat final dans un fichier .h5.
 
-(Rajotuer un test.py pour tester le fichier .h5 apres que le main.py a été exécuté)
+*test.py* 
+
+Pour tester le fichier .h5 sur une image au hasard apres que le main.py a été exécuté.

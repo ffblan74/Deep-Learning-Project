@@ -10,6 +10,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
 import matplotlib.pyplot as plt
 
+
 #etape 1
 def load_flickr_descriptions(filename):
     """

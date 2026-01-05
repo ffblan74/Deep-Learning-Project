@@ -8,6 +8,7 @@ import string
 import os
 
 
+
 # Step 1: texte preprocessing
 def load_flickr_descriptions(filename):
     """
@@ -21,24 +22,21 @@ def load_flickr_descriptions(filename):
             text = file.read()
             
         for line in text.split('\n'):
-            
             # Skip empty lines
             if len(line) < 2:
                 continue
                 
-            # Split the line by whitespace
             tokens = line.split()
             
-            # The first token is the image ID (ex : 1000268201_693b08cb0e.jpg#0)
+            # First token is: image.jpg#0
             image_id = tokens[0]
             
-            # The rest is the description
+            # Rest is the caption
             image_desc = ' '.join(tokens[1:])
             
-            # Remove the tag part (#0, #1, etc.) from the ID
+            # Remove #0, #1...
             image_id = image_id.split('#')[0]
             
-            # Add to dictionary
             if image_id not in mapping:
                 mapping[image_id] = []
             
@@ -119,7 +117,7 @@ def load_glove_embeddings(glove_file_path, word_index, embedding_dim=200):
 
 
 # Step 3: RNN / LSTM
-def build_text_model(vocab_size, max_length, embedding_dim=200, embedding_matrix=None):
+def build_text_model(vocab_size, max_length, embedding_dim=300, embedding_matrix=None):
     """
     Builds the Text branch of the project.
     Input: Sequence of words.
