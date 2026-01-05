@@ -14,7 +14,7 @@ IMAGE_DIR = "Flicker8k_Dataset"
 TOKEN_FILE = "Flickr8k.token.txt"
 GLOVE_FILE = "glove.6B.300d.txt"
 MAX_IMAGES = 2000   # Réduit pour éviter de saturer la RAM avec le Fine-Tuning
-EPOCHS = 10         # Réduit (Cross-Val x 5 prend du temps)
+EPOCHS = 5         
 
 def main():
     print("PROJET DEEP LEARNING : FINE-TUNING & CROSS-VALIDATION\n")

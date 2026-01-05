@@ -1,11 +1,9 @@
 
-
-
-#Part 2
 # GloVe embeddings
 glove.6B/
 glove.6B.300d.txt
 #Flickkr8k dataset
 Flickr8k.token.txt
 Flicker8k_Dataset/
+Flickr8k_Dataset/
 .DS_Store

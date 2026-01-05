@@ -1,30 +1,144 @@
+# Deep Learning Project: Multi-Modal Classification (Vision & NLP)
 
+This project implements a multi-modal fusion architecture combining:
 
-**L'entrée du modèle : une image brute (traitée partie 1) et sa description textuelle (traitée partie 2).**
+- A Convolutional Neural Network (CNN) for computer vision, and
+- A Recurrent Neural Network (RNN) for natural language processing.
 
-BDD utilisé : Flickr8k
+The objective is to perform classification or analysis based on the Flickr8k dataset.
 
-*1. vision_part1.py (partie 1)*
+---
 
-Ce module est responsable du traitement des images. Il utilise un réseau de neurones convolutif pré-entraîné, tel que ResNet50 ou VGG16, pour extraire les caractéristiques visuelles. Chaque image est ainsi transformée en un vecteur numérique.
-Utilise le fichier Flickr8k.token.txt (pour obtenir des description d'images) https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip 
-Utilise le fichier Flickr8k.dataset https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
+## Prerequisites and Data
 
-*3. text_part2.py (partie 2)*
+The project requires the following data, which must be downloaded and extracted at the root of the project:
 
-Utilise le fichier glove.6B.300d.txt (pour traduire les mots en vecteur) https://nlp.stanford.edu/data/glove.6B.zip  
-Utilise le fichier Flickr8k.token.txt (pour obtenir des description d'images) https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip  
-Ce script gère la description. Il nettoie les descriptions, effectue la tokenisation et utilise un réseau récurrent de type LSTM. Son rôle est de convertir les séquences de mots en vecteurs sémantiques qui capturent le contexte et le sens des phrases.
+- Flickr8k Token (Text):
+  https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_text.zip
 
-*5. fusion_part3.py (partie 3)*
+- Flickr8k Dataset (Images):
+  https://github.com/jbrownlee/Datasets/releases/download/Flickr8k/Flickr8k_Dataset.zip
 
-Ce fichier définit l'architecture de fusion multi-modale. Il récupère les vecteurs de sortie des modules de vision (partie 1) et de texte (partie 2), les concatène, puis les passe à travers des couches entièrement connectées (Dense) pour produire la classification ou la prédiction finale.
+- GloVe Embeddings:
+  https://nlp.stanford.edu/data/glove.6B.zip
+  
+  Use the file `glove.6B.300d.txt`.
 
-*7. main.py*
+---
 
-Ce script permet le chargement des données du dataset Flickr8k et le processus d'entraînement.
-Il exécute la boucle d'apprentissage pour ajuster les poids de l'ensemble du modèle (fine-tuning) et sauvegarde le résultat final dans un fichier .h5.
+## Configuration
 
-*test.py* 
+Before running the project, ensure that the paths to the downloaded files are correctly configured in the `main.py` and `test.py` files.
 
-Pour tester le fichier .h5 sur une image au hasard apres que le main.py a été exécuté.
+You can modify these variables at the beginning of the scripts to adapt them to your directory structure:
+
+### Global Configuration (main.py and test.py)
+
+```python
+IMAGE_DIR = "Flicker8k_Dataset"      #  # Folder containing the images (note: located inside the "Flickr8k_Dataset" directory")
+TOKEN_FILE = "Flickr8k.token.txt"    # File containing the descriptions
+GLOVE_FILE = "glove.6B.300d.txt"     # GloVe word vectors
+```
+
+---
+
+## Project Structure
+
+The model input consists of:
+
+- A raw image, processed by the vision branch (Part 1), and
+- Its associated textual description, processed by the text branch (Part 2).
+
+The two representations are then fused to produce the final prediction.
+
+---
+
+## Modules Folder
+
+### vision_part1.py (Part 1)
+
+This module is responsible for image processing.
+
+It uses a pre-trained convolutional neural network (ResNet50) to extract visual features or to load raw image pixels required for Fine-Tuning.
+
+Each image is transformed into a numerical representation usable by the fusion model.
+
+---
+
+### text_part2.py (Part 2)
+
+This script handles the textual component of the project.
+
+It cleans the image descriptions, performs tokenization, and prepares the embedding matrix using GloVe word vectors.
+
+It uses a recurrent neural network (LSTM or GRU) to convert word sequences into semantic vectors that capture contextual information.
+
+---
+
+### fusion_part3.py (Part 3)
+
+This file defines the global multi-modal fusion architecture.
+
+It retrieves the output vectors from the vision and text modules, concatenates them, and passes the fused representation through fully connected (Dense) layers to produce the final prediction.
+
+---
+
+## Main Files
+
+### main.py
+
+This script orchestrates data loading and the complete training process.
+
+It executes the training loop, manages Cross-Validation to tune hyperparameters such as Dropout, and saves the final optimized model into an `.h5` file.
+
+---
+
+### test.py
+
+This script is used for inference.
+
+It allows testing the trained model on a random image to verify its performance.
+
+---
+
+## Usage
+
+### Quick Test (Pre-trained Model)
+
+A trained model (`modele_fusion.h5`) is already provided with this project. You can directly run the test script without retraining the model:
+
+```bash
+python test.py
+```
+
+---
+
+### Full Training
+
+If you wish to retrain the model from scratch, including Fine-Tuning, run:
+
+```bash
+python main.py
+```
+
+Note: Full training is resource-intensive and requires a suitable configuration with sufficient RAM or a GPU.
+
+---
+
+## Dependencies
+
+Install the required Python packages using:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+## Authors
+
+- Hugo LEFEVRE  
+- Camille CHAPTINI  
+- Félix BLANCHIER
+
+Project carried out as part of the Deep Learning course - Year 2025/2026
+

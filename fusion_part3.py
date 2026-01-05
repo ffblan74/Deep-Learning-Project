@@ -20,7 +20,7 @@ def build_fusion_model_finetuning(vocab_size, max_length, embedding_matrix=None,
     
     # fine-tuning On débloque les dernières couches
     cnn_base.trainable = True
-    # On gèle les couches du début (les 140 premières sur ~175) pour ne pas changer les features de base
+    # On gèle les couches du début (les 140 premières sur a peu pres 175) pour ne pas changer les features de base
     for layer in cnn_base.layers[:-30]:
         layer.trainable = False
         
