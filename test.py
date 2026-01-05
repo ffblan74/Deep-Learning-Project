@@ -5,15 +5,14 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.image import load_img
 import matplotlib.pyplot as plt
 
-# Import de tes modules
+
 import vision_part1
 import text_part2
 import fusion_part3
 
-# ==========================================
+
 # CONFIGURATION
-# ==========================================
-MODEL_FILE = "modele_fusion.h5"     # Ton fichier actuel
+MODEL_FILE = "modele_fusion.h5"
 TOKEN_FILE = "Flickr8k.token.txt"
 IMAGE_DIR = "Flicker8k_Dataset"
 
@@ -100,7 +99,6 @@ if __name__ == "__main__":
     all_files = os.listdir(IMAGE_DIR)
     
     # On filtre pour ne garder que les fichiers qui finissent par .jpg
-    # et on exclut les trucs bizarres qui contiennent ":" (comme Zone.Identifier)
     valid_images = [f for f in all_files if f.endswith(".jpg") and ":" not in f]
     
     if len(valid_images) == 0:

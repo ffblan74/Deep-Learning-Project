@@ -12,7 +12,7 @@ import text_part2
 import fusion_part3
 
 
-# Config globale
+# CONFIGURATION
 IMAGE_DIR = "Flicker8k_Dataset"            # Dossier des images
 TOKEN_FILE = "Flickr8k.token.txt"          # Fichier des descriptions
 GLOVE_FILE = "glove.6B.300d.txt"           # Fichier GloVe
